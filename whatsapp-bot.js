@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
+const QRCode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
 
@@ -22,8 +23,8 @@ const LOG_FILE = path.join(__dirname, 'whatsapp-logs.json');
 
 // ── STATE ────────────────────────────────────────────────────
 const client = new Client({
-  authStrategy: new LocalAuth({ dataPath: './.wpp' }),
-  puppeteer: { headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] }
+  authStrategy: new LocalAuth({ dataPath: './.wpp-session' }),
+  puppeteer: { headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] }
 });
 
 // Per-phone-number chat history: { [phone]: [ {role, content}, ... ] }
@@ -169,22 +170,93 @@ client.on('message', async (msg) => {
 });
 
 // ── AUTH & START ───────────────────────────────────────────────
-client.on('qr', (qr) => {
-  console.log('\n============================');
-  console.log('SCAN THIS QR CODE IN WHATSAPP:');
-  console.log('============================\n');
-  qrcode.generate(qr, { small: true });
-  console.log('\nOR visit: https://web.whatsapp.com/scan?code=' + encodeURIComponent(qr));
+const qrCodes = [];
+
+client.on('qr', async (qr) => {
+  console.log('\n' + '═'.repeat(50));
+  console.log('   WHATSAPP BOT - SCAN TO CONNECT');
+  console.log('═'.repeat(50) + '\n');
+  
+  // 1️⃣ Compact terminal QR (smaller, more readable)
+  console.log('📱 Scan this QR with WhatsApp:');
+  qrcode.generate(qr, { 
+    small: true, 
+    margin: 0  // Remove margin for tighter fit
+  });
+  
+  // 2️⃣ Generate QR as PNG file (easy to scan from phone)
+  try {
+    const qrDataUrl = await QRCode.toDataURL(qr, {
+      errorCorrectionLevel: 'L',
+      type: 'png',
+      quality: 0.8,
+      margin: 1,
+      width: 256,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    });
+    
+    // Convert base64 to buffer and save
+    const base64Data = qrDataUrl.replace(/^data:image\/png;base64,/, '');
+    const qrBuffer = Buffer.from(base64Data, 'base64');
+    const qrPath = path.join(__dirname, 'whatsapp-qr.png');
+    fs.writeFileSync(qrPath, qrBuffer);
+    console.log(`\n✅ QR image saved: ${qrPath}`);
+    console.log(`   Open this file and scan it with your phone\n`);
+  } catch (err) {
+    console.log('\n⚠️  Could not generate QR image:', err.message);
+  }
+  
+  // 3️⃣ Show web URL fallback
+  console.log('─'.repeat(50));
+  console.log('Or scan via web.whatsapp.com:');
+  console.log('https://web.whatsapp.com/scan?code=' + encodeURIComponent(qr).slice(0, 50) + '...');
+  console.log('─'.repeat(50) + '\n');
+  
+  qrCodes.push(qr);
+});
+  
+  console.log('\n' + '─'.repeat(50));
+  console.log('📱 OR open this URL on your phone:');
+  console.log('   https://web.whatsapp.com/scan?code=' + encodeURIComponent(qr));
+  console.log('─'.repeat(50) + '\n');
+  
+  qrCodes.push(qr);
+  
+  // Save QR as PNG image for easy scanning from phone
+  (async () => {
+    try {
+      const qrDataUrl = await QRCode.toDataURL(qr, {
+        errorCorrectionLevel: 'L',
+        type: 'png',
+        margin: 1,
+        width: 256
+      });
+      const base64Data = qrDataUrl.replace(/^data:image\/png;base64,/, '');
+      const qrBuffer = Buffer.from(base64Data, 'base64');
+      const qrPath = path.join(__dirname, 'whatsapp-qr.png');
+      fs.writeFileSync(qrPath, qrBuffer);
+      console.log(`✅ QR image saved: ${qrPath}`);
+      console.log(`   Open this file and scan it with your phone\n`);
+    } catch (err) {
+      console.log('⚠️  Could not generate QR image:', err.message);
+    }
+  })();
 });
 
 client.on('ready', () => {
-  console.log('\n✅ WhatsApp Bot is READY!');
+  console.log('\n' + '═'.repeat(50));
+  console.log('✅ WHATSAPP BOT IS READY!');
+  console.log('═'.repeat(50));
   console.log(`   Bot Name: ${config.botName}`);
   console.log(`   Business: ${config.business}`);
-  console.log(`   Provider: Groq (${config.aiProvider})`);
-  console.log(`   Logs: whatsapp-logs.json`);
-  console.log(`   Leads: whatsapp-leads.json`);
-  console.log('\n📱 Waiting for messages...\n');
+  console.log(`   AI Provider: Groq (Llama 3.3)`);
+  console.log(`   Leads file: whatsapp-leads.json`);
+  console.log(`   Logs file:  whatsapp-logs.json`);
+  console.log('═'.repeat(50));
+  console.log('\n📱 Bot is now listening for messages...\n');
 });
 
 client.on('message_create', async (msg) => {
