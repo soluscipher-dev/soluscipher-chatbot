@@ -944,7 +944,7 @@ function openPackage(index) {
 <div class="section">
   <div class="section-title">Website Embed Code</div>
   <div class="code-block">&lt;!-- SolusCipher AI Chatbot --&gt;
-&lt;script src="https://YOUR-RAILWAY-URL/widget.js"&gt;&lt;/script&gt;
+&lt;script src="https://soluscipher-chatbot-production.up.railway.app/widget.js"&gt;&lt;/script&gt;
 &lt;script&gt;
   SolusCipherChat.init({
     business: "${c.name}",
@@ -952,7 +952,7 @@ function openPackage(index) {
     welcome: "Hi! 👋 Welcome to ${c.name}. How can I help you today?",
     color: "${chatColor}",
     provider: "groq",
-    endpoint: "https://YOUR-RAILWAY-URL"
+    endpoint: "https://soluscipher-chatbot-production.up.railway.app"
   });
 &lt;/script&gt;</div>
 </div>
@@ -986,7 +986,7 @@ function buildEmbed() {
   const welcome = document.getElementById('cfg-welcome').value || 'Hi! How can I help?';
   document.getElementById('embed-code').textContent =
 `<!-- SolusCipher AI Chatbot — by SolusCipher Technologies -->
-<script src="https://YOUR-RAILWAY-URL/widget.js"><\\/script>
+<script src="https://soluscipher-chatbot-production.up.railway.app/widget.js"><\\/script>
 <script>
   SolusCipherChat.init({
     botName:  "${botName}",
@@ -994,7 +994,7 @@ function buildEmbed() {
     welcome:  "${welcome}",
     color:    "${chatColor}",
     provider: "${provider}",
-    endpoint: "https://YOUR-RAILWAY-URL"
+    endpoint: "https://soluscipher-chatbot-production.up.railway.app"
   });
 <\\/script>`;
 }
