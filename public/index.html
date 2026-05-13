@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SolusCipher AI Chatbot Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --navy:#0a1628;--navy-mid:#112240;--navy-light:#1e3a5f;
+  --gold:#c9a84c;--gold-light:#e8c96a;
+  --white:#f0efe9;--muted:#8a9ab5;
+  --border:rgba(201,168,76,0.2);
+  --success:#1d9e75;--danger:#e24b4a;--warn:#ba7517;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);display:flex;height:100vh;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:220px;flex-shrink:0;background:var(--navy-mid);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.sidebar-logo{padding:16px 18px;border-bottom:1px solid var(--border);}
+.sidebar-logo .brand{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--gold);}
+.sidebar-logo .sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.nav-section{padding:14px 18px 4px;font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;font-size:13px;color:var(--muted);cursor:pointer;border-left:2px solid transparent;transition:all 0.15s;}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--white);}
+.nav-item.active{background:rgba(201,168,76,0.08);color:var(--white);border-left-color:var(--gold);font-weight:500;}
+.nav-item .icon{font-size:16px;width:18px;text-align:center;}
+  .status-bar{margin-top:auto;padding:14px 18px;border-top:1px solid var(--border);}
+
+  /* TOAST NOTIFICATION */
+  .toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+  .toast{background:#1d1d1d;color:#fff;padding:12px 18px;border-radius:6px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,0.3);border-left:4px solid var(--gold);animation:slideIn 0.3s ease;pointer-events:auto;display:flex;align-items:center;gap:10px;max-width:320px;}
+  .toast.error{border-left-color:var(--danger);}
+  .toast-success{border-left-color:var(--success);}
+  .toast-close{background:none;border:none;color:#fff;cursor:pointer;font-size:16px;padding:0 4px;opacity:0.7;}
+  .toast-close:hover{opacity:1;}
+   @keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+   @keyframes fadeOut{from{opacity:1;}to{opacity:0;}}
+
+   .status-dot{width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;margin-right:6px;}
+.status-txt{font-size:11px;color:var(--muted);}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{padding:14px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--navy);}
+.topbar-left .title{font-size:15px;font-weight:500;}
+.topbar-left .sub{font-size:12px;color:var(--muted);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.provider-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;}
+.pill-claude{background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid var(--border);}
+.pill-gpt{background:rgba(29,158,117,0.15);color:var(--success);border:1px solid rgba(29,158,117,0.3);}
+.btn{padding:7px 16px;font-size:12px;font-weight:500;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--white);cursor:pointer;transition:all 0.2s;}
+.btn:hover{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+.btn-gold:hover{background:var(--gold-light);color:var(--navy);}
+.content{flex:1;overflow-y:auto;padding:24px;}
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* CARDS */
+.card{background:var(--navy-mid);border:1px solid var(--border);border-radius:6px;padding:18px;margin-bottom:16px;}
+.card-title{font-size:13px;font-weight:500;margin-bottom:14px;color:var(--white);display:flex;align-items:center;gap:8px;}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.stat{background:var(--navy);border:1px solid var(--border);border-radius:6px;padding:14px;}
+.stat-val{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--gold);}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* FORMS */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.form-label{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;}
+.form-input{padding:9px 11px;border:1px solid var(--border);border-radius:4px;background:var(--navy);color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
+.form-input:focus{border-color:var(--gold);}
+textarea.form-input{resize:vertical;min-height:90px;}
+select.form-input{cursor:pointer;}
+
+/* PROVIDER TABS */
+.provider-tabs{display:flex;gap:10px;margin-bottom:14px;}
+.p-tab{flex:1;padding:14px;border:1px solid var(--border);border-radius:6px;cursor:pointer;text-align:center;transition:all 0.15s;background:var(--navy);}
+.p-tab.active{border-color:var(--gold);background:rgba(201,168,76,0.06);}
+.p-tab .p-icon{font-size:22px;margin-bottom:5px;}
+.p-tab .p-name{font-size:13px;font-weight:500;}
+.p-tab .p-model{font-size:11px;color:var(--muted);margin-top:2px;}
+.p-fields{padding:14px;background:var(--navy);border:1px solid var(--border);border-radius:6px;margin-bottom:12px;}
+
+/* COLORS */
+.color-row{display:flex;gap:8px;flex-wrap:wrap;}
+.swatch{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.15s;}
+.swatch.selected{border-color:var(--white);transform:scale(1.1);}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:6px;overflow:hidden;height:480px;}
+.chat-head{padding:13px 16px;display:flex;align-items:center;justify-content:space-between;}
+.chat-head-left{display:flex;align-items:center;gap:10px;}
+.chat-online{width:8px;height:8px;border-radius:50%;background:var(--success);}
+.chat-name{font-size:14px;font-weight:500;}
+.chat-status{font-size:11px;opacity:0.7;}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px;background:var(--navy);display:flex;flex-direction:column;gap:10px;}
+.msg{max-width:78%;padding:10px 13px;font-size:13px;line-height:1.55;border-radius:12px;}
+.msg-bot{background:var(--navy-mid);border:1px solid var(--border);align-self:flex-start;border-radius:4px 12px 12px 12px;color:var(--white);}
+.msg-user{align-self:flex-end;border-radius:12px 4px 12px 12px;font-weight:500;color:var(--navy);}
+.msg-error{background:rgba(226,75,74,0.15);border:1px solid rgba(226,75,74,0.3);color:#f09595;align-self:flex-start;border-radius:4px 12px 12px 12px;font-size:12px;}
+.chat-input-row{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border);background:var(--navy-mid);}
+.chat-input-row input{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:4px;font-size:13px;background:var(--navy);color:var(--white);font-family:'DM Sans',sans-serif;outline:none;}
+.chat-input-row input:focus{border-color:var(--gold);}
+.send-btn{padding:9px 16px;border:none;border-radius:4px;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.2s;}
+.typing-dots{display:flex;gap:3px;align-items:center;padding:4px 2px;}
+.typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:bounce 1.2s infinite;}
+.typing-dots span:nth-child(2){animation-delay:0.2s;}
+.typing-dots span:nth-child(3){animation-delay:0.4s;}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-6px);}}
+
+/* EMBED */
+.embed-box{background:var(--navy);border:1px solid var(--border);border-radius:4px;padding:14px;font-family:'Courier New',monospace;font-size:11.5px;color:var(--muted);line-height:1.8;margin-bottom:12px;overflow-x:auto;white-space:pre;}
+
+/* LEADS */
+.lead-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.lead-row:last-child{border:none;}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600;}
+.badge-success{background:rgba(29,158,117,0.15);color:var(--success);border:1px solid rgba(29,158,117,0.3);}
+.badge-gold{background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid var(--border);}
+
+/* CONV ROW */
+.conv-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.conv-row:last-child{border:none;}
+.conv-av{width:34px;height:34px;border-radius:50%;background:rgba(201,168,76,0.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:var(--gold);flex-shrink:0;}
+.conv-msg{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;}
+.conv-time{font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap;}
+
+/* SERVER STATUS */
+.server-status{display:flex;align-items:center;gap:6px;font-size:12px;padding:8px 12px;border-radius:4px;margin-bottom:14px;}
+.server-ok{background:rgba(29,158,117,0.1);border:1px solid rgba(29,158,117,0.3);color:var(--success);}
+.server-err{background:rgba(226,75,74,0.1);border:1px solid rgba(226,75,74,0.3);color:#f09595;}
+.server-chk{background:rgba(201,168,76,0.1);border:1px solid var(--border);color:var(--gold);}
+
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .stat-grid{grid-template-columns:1fr 1fr;}
+  .form-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand">SolusCipher AI</div>
+    <div class="sub">Chatbot Agent Platform</div>
+  </div>
+   <div class="nav-section">Overview</div>
+   <div class="nav-item active" onclick="showPanel('dashboard',this)"><span class="icon">📊</span> Dashboard</div>
+   <div class="nav-item" onclick="showPanel('conversations',this)"><span class="icon">💬</span> Conversations</div>
+   <div class="nav-item" onclick="showPanel('leads',this)"><span class="icon">👥</span> Leads</div>
+   <div class="nav-item" onclick="showPanel('clients',this)"><span class="icon">🏢</span> Clients</div>
+   <div class="nav-section">Setup</div>
+  <div class="nav-item" onclick="showPanel('configure',this)"><span class="icon">⚙️</span> Configure Bot</div>
+  <div class="nav-item" onclick="showPanel('preview',this)"><span class="icon">▶️</span> Live Preview</div>
+  <div class="nav-item" onclick="showPanel('embed',this)"><span class="icon">🔗</span> Embed & Deploy</div>
+  <div class="status-bar">
+    <span class="status-dot" id="server-dot"></span>
+    <span class="status-txt" id="server-txt">Checking server...</span>
+     </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="title" id="panel-title">Dashboard</div>
+          <div class="sub" id="panel-sub">Your chatbot performance overview</div>
+        </div>
+        <div class="topbar-right">
+          <div class="provider-pill pill-gpt" id="active-pill">⚡ Groq</div>
+          <button class="btn btn-gold" onclick="showPanel('preview',document.querySelectorAll('.nav-item')[4])">Test Chatbot</button>
+        </div>
+      </div>
+
+      <div class="content">
+
+        <!-- DASHBOARD -->
+        <div class="panel active" id="panel-dashboard">
+          <div class="stat-grid">
+            <div class="stat"><div class="stat-val" id="s-chats">0</div><div class="stat-lbl">Total Chats</div></div>
+            <div class="stat"><div class="stat-val" id="s-leads">0</div><div class="stat-lbl">Leads Captured</div></div>
+            <div class="stat"><div class="stat-val" id="s-prov">Groq</div><div class="stat-lbl">Active AI</div></div>
+            <div class="stat"><div class="stat-val">24/7</div><div class="stat-lbl">Availability</div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">💬 Recent Conversations</div>
+            <div id="conv-list"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No conversations yet — go to Live Preview to test.</div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">⚡ Quick Actions</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn" onclick="showPanel('configure',document.querySelectorAll('.nav-item')[3])">Configure bot</button>
+              <button class="btn" onclick="showPanel('preview',document.querySelectorAll('.nav-item')[4])">Test chatbot</button>
+              <button class="btn" onclick="showPanel('embed',document.querySelectorAll('.nav-item')[5])">Get embed code</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONFIGURE -->
+        <div class="panel" id="panel-configure">
+          <div class="card">
+            <div class="card-title">🧠 AI Provider</div>
+            <div class="provider-tabs" style="flex-wrap:wrap;">
+              <div class="p-tab" id="tab-gemini" onclick="selectProvider('gemini')">
+                <div class="p-icon">🆓</div><div class="p-name">Gemini</div><div class="p-model">Free — no card</div>
+              </div>
+              <div class="p-tab active" id="tab-groq" onclick="selectProvider('groq')">
+                <div class="p-icon">⚡</div><div class="p-name">Groq</div><div class="p-model">Free — fastest</div>
+              </div>
+              <div class="p-tab" id="tab-openrouter" onclick="selectProvider('openrouter')">
+                <div class="p-icon">🆓</div><div class="p-name">OpenRouter</div><div class="p-model">Free models</div>
+              </div>
+              <div class="p-tab" id="tab-claude" onclick="selectProvider('claude')">
+                <div class="p-icon">💳</div><div class="p-name">Claude</div><div class="p-model">Paid — premium</div>
+              </div>
+              <div class="p-tab" id="tab-openai" onclick="selectProvider('openai')">
+                <div class="p-icon">💳</div><div class="p-name">OpenAI GPT</div><div class="p-model">Paid — premium</div>
+              </div>
+            </div>
+            <div class="p-fields" id="fields-gemini" style="display:none;">
+              <div class="form-group" style="margin-bottom:8px;">
+                <div class="form-label">Model</div>
+                <select class="form-input" id="model-gemini">
+                  <option value="gemini-2.0-flash">gemini-2.0-flash — Free + fast</option>
+                  <option value="gemini-1.5-pro">gemini-1.5-pro — More powerful</option>
+                </select>
+              </div>
+            </div>
+            <div class="p-fields" id="fields-groq">
+              <div class="form-group" style="margin-bottom:8px;">
+                <div class="form-label">Model</div>
+                <select class="form-input" id="model-groq">
+                  <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile — Best for chat</option>
+                  <option value="mixtral-8x7b-32768">mixtral-8x7b-32768 — Fast & capable</option>
+                </select>
+              </div>
+            </div>
+            <div class="p-fields" id="fields-openrouter" style="display:none;">
+              <div class="form-group" style="margin-bottom:8px;">
+                <div class="form-label">Model</div>
+                <select class="form-input" id="model-openrouter">
+                  <option value="meta-llama/llama-3.3-70b-instruct:free">meta-llama/llama-3.3-70b-instruct:free — Strong instruction tuning</option>
+                  <option value="mistralai/mistral-7b-instruct:free">mistralai/mistral-7b-instruct:free — Balanced quality</option>
+                </select>
+              </div>
+            </div>
+            <div class="p-fields" id="fields-claude" style="display:none;">
+              <div class="form-group" style="margin-bottom:8px;">
+                <div class="form-label">Model</div>
+                <select class="form-input" id="model-claude">
+                  <option value="claude-haiku-4-5-20251001">claude-haiku-4.5 — Fastest &amp; cheapest</option>
+                  <option value="claude-sonnet-4-20250514">claude-sonnet-4 — Best quality</option>
+                </select>
+              </div>
+              <div style="font-size:11px;color:var(--muted);">✅ Key is set in your <code>.env</code> file on the server — no need to enter it here.</div>
+            </div>
+            <div class="p-fields" id="fields-openai" style="display:none;">
+              <div class="form-group" style="margin-bottom:8px;">
+                <div class="form-label">Model</div>
+                <select class="form-input" id="model-openai">
+                  <option value="gpt-4o-mini">gpt-4o-mini — Cheapest</option>
+                  <option value="gpt-4o">gpt-4o — Best quality</option>
+                </select>
+              </div>
+              <div style="font-size:11px;color:var(--muted);">✅ Key is set in your <code>.env</code> file on the server — no need to enter it here.</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">🏢 Business Info</div>
+            <div class="form-row">
+              <div class="form-group"><div class="form-label">Business Name</div><input class="form-input" id="cfg-biz" value="My Business" placeholder="e.g. Mama Titi's Kitchen"/></div>
+              <div class="form-group"><div class="form-label">Bot Name</div><input class="form-input" id="cfg-botname" value="Aria" placeholder="e.g. Aria, Max"/></div>
+            </div>
+            <div class="form-group">
+              <div class="form-label">Bot Personality &amp; Instructions</div>
+              <textarea class="form-input" id="cfg-system">You are a professional AI assistant for this business. Your job is to help visitors, answer their questions clearly, and capture their name and email for follow-up.
+
+STRICT RULES:
+- NEVER invent, suggest, or mention fake names, fake emails, or fake phone numbers
+- NEVER say things like "contact John at john@example.com" — you do not know any staff contacts
+- If someone needs to speak to a human, say: "I'll have our team reach out to you — could I get your name and email?"
+- Keep all replies to 2-3 sentences maximum
+- Be warm, helpful, and professional at all times
+- Only state facts you are certain of — never make things up</textarea>
+            </div>
+            <div class="form-group">
+              <div class="form-label">Welcome Message</div>
+              <input class="form-input" id="cfg-welcome" value="Hi! 👋 How can I help you today?"/>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">🎨 Theme Color</div>
+            <div class="color-row">
+              <div class="swatch selected" style="background:#c9a84c;" data-c="#c9a84c" onclick="pickColor(this)"></div>
+              <div class="swatch" style="background:#0a1628;" data-c="#0a1628" onclick="pickColor(this)"></div>
+              <div class="swatch" style="background:#1d9e75;" data-c="#1d9e75" onclick="pickColor(this)"></div>
+              <div class="swatch" style="background:#378add;" data-c="#378add" onclick="pickColor(this)"></div>
+              <div class="swatch" style="background:#d85a30;" data-c="#d85a30" onclick="pickColor(this)"></div>
+              <div class="swatch" style="background:#7f77dd;" data-c="#7f77dd" onclick="pickColor(this)"></div>
+              <div class="swatch" style="background:#d4537e;" data-c="#d4537e" onclick="pickColor(this)"></div>
+            </div>
+          </div>
+          <button class="btn btn-gold" onclick="saveConfig()">Save Configuration</button>
+        </div>
+
+        <!-- PREVIEW -->
+        <div class="panel" id="panel-preview">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="font-size:13px;font-weight:500;">Live chatbot — connected to real AI via proxy</div>
+            <div class="provider-pill" id="preview-pill" style="background:rgba(29,158,117,0.15);color:var(--success);border:1px solid rgba(29,158,117,0.3);">🆓 Gemini</div>
+          </div>
+          <div class="chat-wrap">
+            <div class="chat-head" id="chat-head" style="background:#c9a84c;">
+              <div class="chat-head-left">
+                <div class="chat-online"></div>
+                <div>
+                  <div class="chat-name" id="chat-bot-name" style="color:#0a1628;">Aria</div>
+                  <div class="chat-status" style="color:#0a1628;">Online · SolusCipher AI</div>
+                </div>
+              </div>
+              <div style="font-size:11px;opacity:0.7;color:#0a1628;" id="chat-model-label">haiku-4.5</div>
+            </div>
+            <div class="chat-msgs" id="chat-msgs"></div>
+            <div class="chat-input-row">
+              <input id="chat-input" placeholder="Type a message and press Enter..." onkeydown="if(event.key==='Enter')sendMsg()"/>
+              <button class="send-btn" id="send-btn" onclick="sendMsg()" style="background:var(--gold);color:var(--navy);">Send</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONVERSATIONS -->
+        <div class="panel" id="panel-conversations">
+          <div class="card">
+            <div class="card-title">💬 All Conversations</div>
+            <div id="all-convs"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No conversations yet.</div></div>
+          </div>
+        </div>
+
+        <!-- LEADS -->
+        <div class="panel" id="panel-leads">
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+              <div class="card-title" style="margin:0;">👥 Captured Leads</div>
+              <button class="btn" style="font-size:11px;padding:4px 12px;" onclick="exportLeadsCSV()">📥 Export CSV</button>
+            </div>
+            <div id="leads-list"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No leads yet.</div></div>
+          </div>
+        </div>
+
+        <!-- CLIENTS -->
+        <div class="panel" id="panel-clients">
+          <div class="card">
+            <div class="card-title">🏢 Add New Client</div>
+            <div class="form-row">
+              <div class="form-group"><div class="form-label">Business Name</div><input class="form-input" id="cl-name" placeholder="e.g. Mama Titi's Kitchen"/></div>
+              <div class="form-group"><div class="form-label">Industry</div>
+                <select class="form-input" id="cl-industry">
+                  <option value="">Select...</option>
+                  <option>Restaurant</option>
+                  <option>Real Estate</option>
+                  <option>E-commerce</option>
+                  <option>Healthcare</option>
+                  <option>Salon/Spa</option>
+                  <option>Education</option>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><div class="form-label">WhatsApp Number</div><input class="form-input" id="cl-whatsapp" placeholder="+234 812 345 6789"/></div>
+              <div class="form-group"><div class="form-label">Website URL</div><input class="form-input" id="cl-website" placeholder="https://theirbusiness.com"/></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><div class="form-label">Setup Fee (₦)</div><input class="form-input" id="cl-setup" type="number" placeholder="50000"/></div>
+              <div class="form-group"><div class="form-label">Monthly Fee (₦)</div><input class="form-input" id="cl-monthly" type="number" placeholder="25000"/></div>
+            </div>
+            <div class="form-group"><div class="form-label">Notes</div><textarea class="form-input" id="cl-notes" placeholder="Any special instructions..." rows="3"></textarea></div>
+            <button class="btn btn-gold" onclick="addClient()">Generate Client Package</button>
+          </div>
+
+          <div class="card">
+            <div class="card-title">📋 Client List</div>
+            <div id="clients-list"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No clients yet. Add your first client above.</div></div>
+          </div>
+        </div>
+
+        <!-- EMBED -->
+        <div class="panel" id="panel-embed">
+          <div class="card">
+            <div class="card-title">🔗 Website Embed Code</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Paste this before the closing &lt;/body&gt; tag on your client's website.</div>
+            <div class="embed-box" id="embed-code"></div>
+            <button class="btn btn-gold" onclick="copyEmbed()">📋 Copy Code</button>
+          </div>
+          <div class="card">
+            <div class="card-title">🚀 Deploy to Railway (free hosting)</div>
+            <div style="font-size:13px;color:var(--muted);line-height:1.8;">
+              1. Push this project to GitHub<br/>
+              2. Go to <strong style="color:var(--white);">railway.app</strong> → New Project → Deploy from GitHub<br/>
+              3. Add environment variables: <code style="font-size:11px;background:var(--navy);padding:1px 5px;border-radius:3px;">ANTHROPIC_API_KEY</code> and <code style="font-size:11px;background:var(--navy);padding:1px 5px;border-radius:3px;">OPENAI_API_KEY</code><br/>
+              4. Railway gives you a live URL — your bot runs 24/7 for free
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <script>
+// ── STATE ────────────────────────────────────────────────────
+let provider = 'groq';
+let chatColor = '#c9a84c';
+let chatHistory = [];
+let totalChats = 0;
+let leads = [];
+let convs = [];
+let clients = [];
+let isTyping = false;
+
+// Load persisted data on startup
+(function loadData() {
+  const savedLeads = localStorage.getItem('sc_leads');
+  if (savedLeads) leads = JSON.parse(savedLeads);
+  const savedConvs = localStorage.getItem('sc_conversations');
+  if (savedConvs) convs = JSON.parse(savedConvs);
+  const savedClients = localStorage.getItem('sc_clients');
+  if (savedClients) clients = JSON.parse(savedClients);
+  const savedTotalChats = localStorage.getItem('sc_totalChats');
+  if (savedTotalChats) totalChats = parseInt(savedTotalChats, 10);
+})();
+
+const meta = {
+  dashboard:     { title:'Dashboard',       sub:'Your chatbot performance overview' },
+  configure:     { title:'Configure Bot',   sub:'Set AI provider, personality and theme per client' },
+  preview:       { title:'Live Preview',    sub:'Test your chatbot with real AI — connected through local proxy' },
+  conversations: { title:'Conversations',   sub:'All chat sessions' },
+  leads:         { title:'Leads',           sub:'Contacts captured during conversations' },
+  clients:       { title:'Clients',         sub:'Manage your client accounts and generate setup packages' },
+  embed:         { title:'Embed & Deploy',  sub:'Get the embed code for your client\'s website' }
+};
+
+// ── NAV ──────────────────────────────────────────────────────
+function showPanel(id, el) {
+  const target = document.getElementById('panel-' + id);
+  if (!target) { console.warn('Panel not found: panel-' + id); return; }
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  target.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const m = meta[id];
+  if (m) {
+    document.getElementById('panel-title').textContent = m.title;
+    document.getElementById('panel-sub').textContent = m.sub;
+  }
+  if (id === 'preview') initChat();
+  if (id === 'embed') buildEmbed();
+  if (id === 'clients') renderClients();
+}
+
+// ── PROVIDER ─────────────────────────────────────────────────
+function selectProvider(p) {
+  provider = p;
+  const providers = ['gemini','groq','openrouter','claude','openai'];
+  providers.forEach(name => {
+    document.getElementById('tab-' + name).classList.toggle('active', p === name);
+    document.getElementById('fields-' + name).style.display = p === name ? 'block' : 'none';
+  });
+  updateProviderUI();
+}
+
+function updateProviderUI() {
+  const pill = document.getElementById('active-pill');
+  const ppill = document.getElementById('preview-pill');
+  const modelLabel = document.getElementById('chat-model-label');
+  const modelSelect = document.getElementById('model-' + provider);
+  const modelVal = modelSelect ? modelSelect.options[modelSelect.selectedIndex].text.replace(/\s+—.*$/, '') : '';
+
+  if (provider === 'claude') {
+    pill.className = 'provider-pill pill-claude'; pill.textContent = '🧠 Claude';
+    ppill.className = 'provider-pill pill-claude'; ppill.textContent = '🧠 Claude';
+  } else if (provider === 'openai') {
+    pill.className = 'provider-pill pill-gpt'; pill.textContent = '💳 OpenAI GPT';
+    ppill.className = 'provider-pill pill-gpt'; ppill.textContent = '💳 OpenAI GPT';
+  } else if (provider === 'openrouter') {
+    pill.className = 'provider-pill pill-gpt'; pill.textContent = '🆓 OpenRouter';
+    ppill.className = 'provider-pill pill-gpt'; ppill.textContent = '🆓 OpenRouter';
+  } else if (provider === 'groq') {
+    pill.className = 'provider-pill pill-gpt'; pill.textContent = '⚡ Groq';
+    ppill.className = 'provider-pill pill-gpt'; ppill.textContent = '⚡ Groq';
+  } else {
+    pill.className = 'provider-pill pill-gpt'; pill.textContent = '🆓 Gemini';
+    ppill.className = 'provider-pill pill-gpt'; ppill.textContent = '🆓 Gemini';
+  }
+
+  document.getElementById('s-prov').textContent = provider === 'claude' ? 'Claude' : provider === 'openai' ? 'OpenAI' : provider === 'openrouter' ? 'OpenRouter' : provider === 'groq' ? 'Groq' : 'Gemini';
+  if (modelLabel) modelLabel.textContent = modelVal;
+}
+
+// ── CONFIG ───────────────────────────────────────────────────
+function pickColor(el) {
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  chatColor = el.dataset.c;
+  applyColor();
+}
+
+function applyColor() {
+  const head = document.getElementById('chat-head');
+  const btn = document.getElementById('send-btn');
+  if (head) { head.style.background = chatColor; }
+  if (btn) { btn.style.background = chatColor; }
+  document.querySelectorAll('.msg-user').forEach(m => m.style.background = chatColor);
+}
+
+function saveConfig() {
+  chatHistory = [];
+  document.getElementById('chat-msgs').innerHTML = '';
+  document.getElementById('chat-bot-name').textContent = document.getElementById('cfg-botname').value || 'Aria';
+  updateProviderUI();
+  applyColor();
+  buildEmbed();
+  alert('✅ Configuration saved! Go to Live Preview to test.');
+}
+
+// ── CHAT ─────────────────────────────────────────────────────
+function initChat() {
+  const msgs = document.getElementById('chat-msgs');
+  if (msgs.children.length === 0) {
+    addBotMsg(document.getElementById('cfg-welcome').value || 'Hi! How can I help you today?');
+    document.getElementById('chat-bot-name').textContent = document.getElementById('cfg-botname').value || 'Aria';
+    applyColor();
+    updateProviderUI();
+  }
+}
+
+function addBotMsg(text, isError) {
+  const msgs = document.getElementById('chat-msgs');
+  const div = document.createElement('div');
+  div.className = isError ? 'msg msg-error' : 'msg msg-bot';
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addUserMsg(text) {
+  const msgs = document.getElementById('chat-msgs');
+  const div = document.createElement('div');
+  div.className = 'msg msg-user';
+  div.style.background = chatColor;
+  div.style.color = chatColor === '#0a1628' ? '#f0efe9' : '#0a1628';
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('chat-msgs');
+  const div = document.createElement('div');
+  div.className = 'msg msg-bot typing-indicator';
+  div.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+async function sendMsg() {
+  if (isTyping) return;
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  addUserMsg(text);
+  chatHistory.push({ role: 'user', content: text });
+  isTyping = true;
+  document.getElementById('send-btn').disabled = true;
+  const typingEl = showTyping();
+
+  const biz = document.getElementById('cfg-biz').value || 'this business';
+  const system = document.getElementById('cfg-system').value || `You are a helpful assistant for ${biz}.`;
+  const modelEl = document.getElementById('model-' + provider);
+  const model = modelEl ? modelEl.value : '';
+
+  try {
+    const endpoint = `/chat/${provider}`;
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: chatHistory, system, model })
+    });
+
+    const data = await res.json();
+    typingEl.remove();
+
+    if (!res.ok || data.error) {
+      let isRateLimit = false;
+      let errorMsg = data.error || 'Something went wrong.';
+
+      if (data.quotaExceeded || data.fallback) {
+        isRateLimit = true;
+      }
+
+      if (isRateLimit) {
+        if (data.fallback && data.provider) {
+          provider = data.provider;
+        } else {
+          provider = 'groq';
+        }
+        updateProviderUI();
+        const modelEl2 = document.getElementById('model-' + provider);
+        const model2 = modelEl2 ? modelEl2.value : 'llama-3.3-70b-versatile';
+        try {
+          const retryRes = await fetch(`/chat/${provider}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: chatHistory, system, model2 })
+          });
+          const retryData = await retryRes.json();
+          if (retryRes.ok && retryData.reply) {
+            chatHistory.push({ role: 'assistant', content: retryData.reply });
+            addBotMsg(retryData.reply);
+            checkLead(text);
+            logConv(text);
+            isTyping = false;
+            document.getElementById('send-btn').disabled = false;
+            return;
+          }
+        } catch (retryErr) {
+          // fallthrough to show toast
+        }
+      }
+
+      showToast('Connection issue — retrying...', 4000, 'error');
+      setTimeout(() => {
+        addBotMsg("I'm having trouble connecting right now. Please try again.", true);
+      }, 500);
+    } else {
+      chatHistory.push({ role: 'assistant', content: data.reply });
+      addBotMsg(data.reply);
+      checkLead(text);
+      logConv(text);
+    }
+  } catch (err) {
+    typingEl.remove();
+    showToast('Connection issue — retrying...', 4000, 'error');
+    setTimeout(() => {
+      addBotMsg("I'm having trouble connecting right now. Please try again.", true);
+    }, 500);
+  }
+
+  isTyping = false;
+  document.getElementById('send-btn').disabled = false;
+}
+
+function checkLead(msg) {
+  const email = msg.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  const name = msg.match(/(?:i(?:'m| am)|my name(?:'s| is)|call me)\s+([A-Z][a-z]+)/i);
+  if (email || name) {
+    const lead = {
+      name: name ? name[1] : 'Visitor',
+      email: email ? email[0] : '—',
+      time: new Date().toLocaleTimeString(),
+      provider,
+      message: msg.slice(0, 100),
+      contacted: false
+    };
+    leads.unshift(lead);
+    saveLeads();
+    document.getElementById('s-leads').textContent = leads.length;
+    renderLeads();
+    showToast('Lead captured!', 3000, 'success');
+  }
+}
+
+function renderLeads() {
+  const el = document.getElementById('leads-list');
+  if (!leads.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No leads yet.</div>';
+    return;
+  }
+  el.innerHTML = leads.map((l, i) => `
+    <div class="lead-row" style="${l.contacted ? 'opacity:0.5;' : ''}">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:34px;height:34px;border-radius:50%;background:rgba(201,168,76,0.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:var(--gold);flex-shrink:0;">${(l.name||'V')[0].toUpperCase()}</div>
+        <div>
+          <div style="font-size:13px;font-weight:500;${l.contacted ? 'text-decoration:line-through;' : ''}">${l.name || 'Visitor'}</div>
+          <div style="font-size:11px;color:var(--muted);">${l.email} · ${l.time}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="badge badge-gold" style="font-size:10px;">${l.provider || 'AI'}</span>
+        <span class="badge ${l.contacted ? '' : 'badge-success'}" style="${l.contacted ? 'background:rgba(255,255,255,0.05);color:var(--muted);' : ''}">${l.contacted ? 'Contacted' : 'Lead'}</span>
+        <button class="btn" style="font-size:10px;padding:3px 8px;" onclick="markContacted(${i})">${l.contacted ? '↩ Undo' : '✓ Mark Contacted'}</button>
+      </div>
+    </div>`).join('');
+}
+
+function markContacted(i) {
+  leads[i].contacted = !leads[i].contacted;
+  saveLeads();
+  renderLeads();
+}
+
+function saveLeads() {
+  localStorage.setItem('sc_leads', JSON.stringify(leads));
+}
+
+function saveConversations() {
+  localStorage.setItem('sc_conversations', JSON.stringify(convs));
+  localStorage.setItem('sc_totalChats', totalChats.toString());
+}
+
+function logConv(msg) {
+  totalChats++;
+  localStorage.setItem('sc_totalChats', totalChats.toString());
+  document.getElementById('s-chats').textContent = totalChats;
+  const c = {
+    id: totalChats,
+    msg: msg.slice(0, 50),
+    time: new Date().toLocaleTimeString(),
+    date: new Date().toISOString()
+  };
+  convs.unshift(c);
+  saveConversations();
+  const html = `<div class="conv-row">
+    <div class="conv-av">${msg.charAt(0).toUpperCase()}</div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:13px;font-weight:500;">Visitor ${c.id}</div>
+      <div class="conv-msg">${c.msg}</div>
+    </div>
+    <span class="conv-time">${c.time}</span>
+  </div>`;
+  const cl = document.getElementById('conv-list');
+  const acl = document.getElementById('all-convs');
+  if (cl.querySelector('div[style]')) cl.innerHTML = '';
+  if (acl.querySelector('div[style]')) acl.innerHTML = '';
+  cl.insertAdjacentHTML('afterbegin', html);
+  acl.insertAdjacentHTML('afterbegin', html);
+}
+
+function loadConversations() {
+  if (convs.length > 0) {
+    const cl = document.getElementById('conv-list');
+    const acl = document.getElementById('all-convs');
+    let first = true;
+    convs.forEach(c => {
+      const html = `<div class="conv-row">
+        <div class="conv-av">${c.msg.charAt(0).toUpperCase()}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:500;">Visitor ${c.id}</div>
+          <div class="conv-msg">${c.msg}</div>
+        </div>
+        <span class="conv-time">${c.time}</span>
+      </div>`;
+      if (first) { cl.innerHTML = html; acl.innerHTML = html; first = false; }
+      else { cl.insertAdjacentHTML('afterbegin', html); acl.insertAdjacentHTML('afterbegin', html); }
+    });
+    document.getElementById('s-chats').textContent = totalChats;
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────────────────
+function showToast(message, duration = 3000, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast' + (type === 'error' ? ' error' : type === 'success' ? ' toast-success' : '');
+  toast.innerHTML = `<span>${message}</span><button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, duration);
+}
+
+// ── EXPORT CSV ─────────────────────────────────────────────────
+function exportLeadsCSV() {
+  if (!leads.length) { showToast('No leads to export', 2000); return; }
+  const header = 'Name,Email,Time,Provider,Message';
+  const rows = leads.map(l => `"${l.name}","${l.email}","${l.time}","${l.provider || 'unknown'}","${(l.message||'').replace(/"/g,'""')}"`);
+  const csv = [header, ...rows].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'soluscipher-leads-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Leads exported!', 2000, 'success');
+}
+
+// ── CLIENTS ────────────────────────────────────────────────────
+const industryPrompts = {
+  'Restaurant': `You are a friendly AI assistant for {name}, a restaurant. Help customers with:
+- Menu questions and recommendations
+- Table reservations (capture name, date, time, party size)
+- Opening hours and location
+- Delivery and takeout orders
+Always capture customer name and phone/email for reservations. Never invent menu items or prices.`,
+  'Real Estate': `You are a professional AI assistant for {name}, a real estate agency. Help clients with:
+- Property listings and availability
+- Booking property viewings (capture name, email, preferred date)
+- Pricing inquiries
+- Connecting with an agent for detailed discussions
+Always capture lead's name, email, and what type of property they're looking for.`,
+  'E-commerce': `You are a helpful AI assistant for {name}, an online store. Help customers with:
+- Product information and availability
+- Order tracking and shipping questions
+- Returns and refund policy
+- Recommending products based on their needs
+Capture email for order follow-ups. Never promise discounts or prices you don't know.`,
+  'Healthcare': `You are a professional AI assistant for {name}, a healthcare provider. Help patients with:
+- Booking appointments (capture name, contact, preferred time)
+- General information about services offered
+- Directions and opening hours
+- Connecting with the right department
+Never provide medical advice or diagnoses. Always recommend speaking with a qualified professional.`,
+  'Salon/Spa': `You are a warm AI assistant for {name}, a salon and spa. Help clients with:
+- Service menu and pricing questions
+- Booking appointments (capture name, service wanted, preferred date/time)
+- Product recommendations
+- Opening hours and location
+Always confirm bookings need human approval and capture client contact details.`,
+  'Education': `You are a helpful AI assistant for {name}, an educational institution. Help students and parents with:
+- Course and program information
+- Enrollment and admission inquiries (capture name, email, program of interest)
+- Fees and payment plans
+- Connecting with the admissions team
+Always be encouraging and professional.`,
+  'Other': `You are a professional AI assistant for {name}. Help visitors with questions about products and services, capture their name and email for follow-up, and connect complex requests to the team. Be warm, concise, and professional. Never invent contacts or fake information.`
+};
+
+function addClient() {
+  const name = document.getElementById('cl-name').value.trim();
+  const industry = document.getElementById('cl-industry').value;
+  const whatsapp = document.getElementById('cl-whatsapp').value.trim();
+  const website = document.getElementById('cl-website').value.trim();
+  const setup = document.getElementById('cl-setup').value;
+  const monthly = document.getElementById('cl-monthly').value;
+  const notes = document.getElementById('cl-notes').value.trim();
+
+  if (!name || !industry || !whatsapp || !website || !setup || !monthly) {
+    showToast('Please fill all required fields', 3000, 'error');
+    return;
+  }
+
+  const clients = JSON.parse(localStorage.getItem('sc_clients') || '[]');
+  const client = {
+    id: Date.now(),
+    name, industry, whatsapp, website,
+    setup, monthly, notes,
+    status: 'Active',
+    date: new Date().toLocaleDateString()
+  };
+  clients.unshift(client);
+  localStorage.setItem('sc_clients', JSON.stringify(clients));
+  renderClients();
+  openPackage(0);
+  showToast('Client added!', 2000, 'success');
+}
+
+function renderClients() {
+  const clients = JSON.parse(localStorage.getItem('sc_clients') || '[]');
+  const el = document.getElementById('clients-list');
+  if (!clients.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No clients yet. Add your first client above.</div>';
+    return;
+  }
+  el.innerHTML = clients.map((c, i) => `
+    <div class="lead-row">
+      <div>
+        <div style="font-size:13px;font-weight:500;">${c.name}</div>
+        <div style="font-size:11px;color:var(--muted);">${c.industry} · ₦${Number(c.monthly).toLocaleString()}/mo · Added ${c.date}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="badge badge-success">${c.status}</span>
+        <button class="btn" style="font-size:11px;padding:4px 10px;" onclick="openPackage(${i})">Open Package</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openPackage(index) {
+  const clients = JSON.parse(localStorage.getItem('sc_clients') || '[]');
+  const c = clients[index];
+  if (!c) return;
+  const prompt = (industryPrompts[c.industry] || industryPrompts['Other']).replace(/{name}/g, c.name);
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>SolusCipher Package — ${c.name}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Courier New',monospace;background:#0a1628;color:#f0efe9;padding:40px;max-width:800px;margin:0 auto;}
+    h1{font-family:serif;color:#c9a84c;font-size:22px;margin-bottom:4px;}
+    .sub{color:#8a9ab5;font-size:12px;margin-bottom:30px;}
+    .section{margin-bottom:24px;}
+    .section-title{font-size:11px;font-weight:bold;letter-spacing:0.12em;text-transform:uppercase;color:#c9a84c;border-bottom:1px solid rgba(201,168,76,0.3);padding-bottom:6px;margin-bottom:12px;}
+    .row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;}
+    .row-label{color:#8a9ab5;}
+    .row-val{color:#f0efe9;font-weight:500;}
+    .code-block{background:#060e1a;border:1px solid rgba(201,168,76,0.2);border-radius:4px;padding:14px;font-size:11px;line-height:1.8;color:#8a9ab5;white-space:pre-wrap;margin-top:8px;}
+    .total{background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:4px;padding:12px;display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
+    .total-label{color:#c9a84c;font-size:12px;font-weight:bold;}
+    .total-val{color:#c9a84c;font-size:18px;font-weight:bold;}
+    .print-btn{position:fixed;top:20px;right:20px;padding:10px 20px;background:#c9a84c;color:#0a1628;border:none;border-radius:4px;cursor:pointer;font-weight:bold;font-size:13px;}
+    .print-btn:hover{background:#e8c96a;}
+    @media print{.print-btn{display:none;}}
+  </style>
+</head>
+<body>
+<button class="print-btn" onclick="window.print()">📥 Download PDF</button>
+<h1>SolusCipher Client Package</h1>
+<div class="sub">Generated by SolusCipher Technologies · soluscipher.dev@gmail.com · ${new Date().toLocaleDateString()}</div>
+
+<div class="section">
+  <div class="section-title">Client Details</div>
+  <div class="row"><span class="row-label">Business Name</span><span class="row-val">${c.name}</span></div>
+  <div class="row"><span class="row-label">Industry</span><span class="row-val">${c.industry}</span></div>
+  <div class="row"><span class="row-label">WhatsApp</span><span class="row-val">${c.whatsapp || '—'}</span></div>
+  <div class="row"><span class="row-label">Website</span><span class="row-val">${c.website || '—'}</span></div>
+  <div class="row"><span class="row-label">Start Date</span><span class="row-val">${c.date}</span></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Invoice</div>
+  <div class="row"><span class="row-label">Setup Fee (one-time)</span><span class="row-val">₦${Number(c.setup||0).toLocaleString()}</span></div>
+  <div class="row"><span class="row-label">Monthly Retainer</span><span class="row-val">₦${Number(c.monthly||0).toLocaleString()}/month</span></div>
+  <div class="row"><span class="row-label">AI Provider</span><span class="row-val">Groq (Llama 3.3) — Free tier</span></div>
+  <div class="total"><span class="total-label">First Payment Due</span><span class="total-val">₦${(Number(c.setup||0)+Number(c.monthly||0)).toLocaleString()}</span></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Bot System Prompt</div>
+  <div class="code-block">${prompt}</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Website Embed Code</div>
+  <div class="code-block">&lt;!-- SolusCipher AI Chatbot --&gt;
+&lt;script src="http://localhost:3001/widget.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  SolusCipherChat.init({
+    business: "${c.name}",
+    botName: "${c.name.split(' ')[0]}",
+    welcome: "Hi! 👋 Welcome to ${c.name}. How can I help you today?",
+    color: "${chatColor}",
+    provider: "groq",
+    endpoint: "http://localhost:3001"
+  });
+&lt;/script&gt;</div>
+</div>
+
+<div class="section">
+  <div class="section-title">WhatsApp Setup Steps</div>
+  <div class="code-block">1. Get a dedicated SIM card for the bot (₦200-500)
+2. Install WhatsApp on that number
+3. Run: node whatsapp-bot.js in the project folder
+4. Scan the QR code shown in the terminal
+5. Share the WhatsApp number with ${c.name}: ${c.whatsapp}
+6. Test by sending "Hi" to the bot number</div>
+</div>
+
+${c.notes ? `<div class="section"><div class="section-title">Notes</div><div class="code-block">${c.notes}</div></div>` : ''}
+
+<div class="section">
+  <div class="section-title">Payment Details</div>
+  <div class="code-block">Bank: [Your Bank Name]
+Account Name: SolusCipher Technologies
+Account Number: [Your Account Number]
+Reference: ${c.name.replace(/\s+/g,'-').toUpperCase()}-${Date.now().toString().slice(-6)}</div>
+</div>
+</body></html>`);
+}
+
+// ── EMBED ──────────────────────────────────────────────────────
+function buildEmbed() {
+  const botName = document.getElementById('cfg-botname').value || 'Aria';
+  const biz = document.getElementById('cfg-biz').value || 'My Business';
+  const welcome = document.getElementById('cfg-welcome').value || 'Hi! How can I help?';
+  document.getElementById('embed-code').textContent =
+`<!-- SolusCipher AI Chatbot — by SolusCipher Technologies -->
+<script src="http://localhost:3001/widget.js"><\\/script>
+<script>
+  SolusCipherChat.init({
+    botName:  "${botName}",
+    business: "${biz}",
+    welcome:  "${welcome}",
+    color:    "${chatColor}",
+    provider: "${provider}",
+    endpoint: "http://localhost:3001"
+  });
+<\\/script>`;
+}
+
+function copyEmbed() {
+  navigator.clipboard.writeText(document.getElementById('embed-code').textContent)
+    .then(() => showToast('Embed code copied!', 2000, 'success'))
+    .catch(() => showToast('Failed to copy — select manually', 2000, 'error'));
+}
+
+// ── SERVER HEALTH ─────────────────────────────────────────────
+async function checkServer() {
+  const dot = document.getElementById('server-dot');
+  const txt = document.getElementById('server-txt');
+  try {
+    const res = await fetch('/health');
+    const data = await res.json();
+    dot.style.background = 'var(--success)';
+    const keys = [];
+    if (data.gemini) keys.push('Gemini ✅');
+    if (data.groq) keys.push('Groq ✅');
+    if (data.openrouter) keys.push('OpenRouter ✅');
+    if (data.anthropic) keys.push('Claude ✅');
+    if (data.openai) keys.push('GPT ✅');
+    if (!data.gemini) keys.push('Gemini ❌');
+    if (!data.groq) keys.push('Groq ❌');
+    if (!data.openrouter) keys.push('OpenRouter ❌');
+    if (!data.anthropic) keys.push('Claude ❌');
+    if (!data.openai) keys.push('GPT ❌');
+    txt.textContent = keys.join(' · ');
+  } catch {
+    dot.style.background = 'var(--danger)';
+    txt.textContent = 'Server offline';
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+document.getElementById('s-leads').textContent = leads.length;
+buildEmbed();
+checkServer();
+setInterval(checkServer, 10000);
+loadConversations();
+if (leads.length > 0) renderLeads();
+if (clients.length > 0) renderClients();
+if (clients.length > 0) renderClients();
+  </script>
+</body>
+</html>
